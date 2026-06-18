@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Super Toolbox</title>
+
+<link rel="icon" href="data:image/svg+xml,
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+<rect width='100' height='100' rx='20' fill='%2300adee'/>
+<text x='50' y='58' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif'>🧰</text>
+</svg>">
+
+<style>
+:root {
+  --bg: #111827;
+  --fg: #e5e7eb;
+  --card: #020617;
+  --border: #1f2937;
+  --input-bg: #0f172a;
+  --accent: #38bdf8;
+}
+
+.light {
+  --bg: #f3f4f6;
+  --fg: #111827;
+  --card: #ffffff;
+  --border: #d1d5db;
+  --input-bg: #f9fafb;
+  --accent: #2563eb;
+}
+
+/* animated theme transitions */
+body, header, #tabs, #content, .card, textarea, input, button, pre {
+  transition: background-color .35s ease, color .35s ease, border-color .35s ease;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+header {
+  background: var(--card);
+  padding: 14px 20px;
+  font-size: 20px;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#tabs {
+  display: flex;
+  overflow-x: auto;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+
+#tabs button {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  background: transparent;
+  border: 0;
+  color: var(--fg);
+  opacity: 0.6;
+  cursor: pointer;
+  font-size: 13px;
+  transition: opacity .25s ease;
+}
+
+#tabs button.active {
+  opacity: 1;
+  border-bottom: 2px solid var(--accent);
+}
+
+#content {
+  padding: 16px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 14px;
+}
+
+textarea, input {
+  width: 100%;
+  background: var(--input-bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  margin: 6px 0;
+  font-family: ui-monospace, monospace;
+  font-size: 13px;
+}
+
+textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+button.action {
+  padding: 6px 12px;
+  background: var(--accent);
+  border-radius: 999px;
+  border: 0;
+  color: var(--card);
+  font-size: 12px;
+  font-weight: 600;
+  margin: 4px 4px 8px 0;
+  cursor: pointer;
+  transition: background-color .25s ease, color .25s ease;
+}
+
+button.secondary {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+}
+
+button.danger {
+  background: #ef4444;
+  color: #f9fafb;
+}
+
+pre {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.row > * {
+  flex: 1 1 0;
+}
+
+small.hint {
+  font-size: 11px;
+  color: #6b7280;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:22px;margin-right:10px">🧰</span>
+  <span style="font-weight:600;font-size:18px">Super Toolbox</span>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+    <small>offline devtools suite</small>
+    <button id="themeToggle" class="action secondary" style="padding:4px 10px;font-size:11px">
+      🌙 Dark
+    </button>
+  </div>
+</header>
+
+<div id="tabs"></div>
+<div id="content"></div>
+
+<script>
+/* ===================== TOOLS ===================== */
+
+const tools = {
+
+"Base64 / URL / HTML": `
+  <div class="card">
+    <h2>Base64</h2>
+    <textarea id="b64in" placeholder="Input"></textarea>
+    <button class="action" onclick="b64out.value=btoa(b64in.value)">Encode</button>
+    <button class="action secondary" onclick="b64out.value=atob(b64in.value)">Decode</button>
+    <textarea id="b64out" placeholder="Output"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>URL Encode / Decode</h2>
+    <textarea id="urlin" placeholder="Input"></textarea>
+    <button class="action" onclick="urlout.value=encodeURIComponent(urlin.value)">Encode</button>
+    <button class="action secondary" onclick="urlout.value=decodeURIComponent(urlin.value)">Decode</button>
+    <textarea id="urlout" placeholder="Output"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>HTML Escape / Unescape</h2>
+    <textarea id="htmlin" placeholder="Input"></textarea>
+    <button class="action" onclick="htmlout.value=htmlin.value.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))">Escape</button>
+    <button class="action secondary" onclick="htmlout.value=new DOMParser().parseFromString(htmlin.value,'text/html').documentElement.textContent">Unescape</button>
+    <textarea id="htmlout" placeholder="Output"></textarea>
+  </div>
+`,
+
+"Time / JWT": `
+  <div class="card">
+    <h2>Timestamp ⇄ Date</h2>
+    <input id="ts" placeholder="timestamp or date">
+    <button class="action" onclick="tsout.value=new Date(isNaN(ts.value)?ts.value:ts.value*1000).toString()">To Date</button>
+    <button class="action secondary" onclick="tsout.value=Math.floor(new Date(ts.value).getTime()/1000)">To Timestamp</button>
+    <textarea id="tsout" placeholder="Result"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>JWT Decode</h2>
+    <textarea id="jwtin" placeholder="Paste JWT"></textarea>
+    <button class="action" onclick="decodeJWT()">Decode</button>
+    <textarea id="jwtout" placeholder="Header + payload"></textarea>
+    <small class="hint">Signature is not verified; inspection only.</small>
+  </div>
+`,
+
+"Hashing / AES": `
+  <div class="card">
+    <h2>Hashing</h2>
+    <textarea id="hashin" placeholder="Input"></textarea>
+    <button class="action" onclick="doHash('SHA-256')">SHA-256</button>
+    <button class="action" onclick="doHash('SHA-1')">SHA-1</button>
+    <button class="action" onclick="doMD5()">MD5</button>
+    <textarea id="hashout" placeholder="Hex digest"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>AES Encrypt / Decrypt (toy)</h2>
+    <textarea id="aesText" placeholder="Text"></textarea>
+    <input id="aesKey" placeholder="Password">
+    <button class="action" onclick="aesEncrypt()">Encrypt</button>
+    <button class="action secondary" onclick="aesDecrypt()">Decrypt</button>
+    <textarea id="aesOut" placeholder="Cipher / plain"></textarea>
+    <small class="hint">Not real AES, just a simple local obfuscation.</small>
+  </div>
+`,
+
+"QR / UUID / Random": `
+  <div class="card">
+    <h2>QR Code Generator</h2>
+    <textarea id="qrText" placeholder="Text / URL"></textarea>
+    <button class="action" onclick="makeQR()">Generate</button>
+    <div id="qrOut" style="margin-top:8px;"></div>
+    <small class="hint">Uses an online QR API if you’re connected.</small>
+  </div>
+
+  <div class="card">
+    <h2>UUID Generator</h2>
+    <button class="action" onclick="uuidOut.value=crypto.randomUUID()">Generate UUID</button>
+    <textarea id="uuidOut" placeholder="UUID"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Random Generators</h2>
+    <button class="action" onclick="randOut.value=Math.random()">Random Float</button>
+    <button class="action" onclick="randOut.value=Math.floor(Math.random()*1e9)">Random Int</button>
+    <textarea id="randOut" placeholder="Random value"></textarea>
+  </div>
+`,
+
+"Markdown / Sandbox": `
+  <div class="card">
+    <h2>Markdown Preview (very basic)</h2>
+    <textarea id="mdIn" placeholder="# Title"></textarea>
+    <button class="action" onclick="renderMD()">Render</button>
+    <div id="mdOut" style="background:var(--input-bg);padding:10px;border-radius:6px;margin-top:6px;"></div>
+    <small class="hint">This just escapes HTML and shows text; not a full markdown engine.</small>
+  </div>
+
+  <div class="card">
+    <h2>HTML/CSS/JS Sandbox</h2>
+    <textarea id="sandboxHTML" placeholder="HTML"></textarea>
+    <textarea id="sandboxCSS" placeholder="CSS"></textarea>
+    <textarea id="sandboxJS" placeholder="JS"></textarea>
+    <button class="action" onclick="runSandbox()">Run</button>
+    <iframe id="sandboxFrame" style="width:100%;height:220px;background:white;border-radius:6px;border:1px solid var(--border);margin-top:6px;"></iframe>
+  </div>
+`,
+
+"CSV / JSON / YAML": `
+  <div class="card">
+    <h2>CSV → JSON</h2>
+    <textarea id="csvIn" placeholder="col1,col2\n1,2"></textarea>
+    <button class="action" onclick="csvToJson()">Convert</button>
+    <textarea id="csvOut" placeholder="JSON"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>JSON → CSV</h2>
+    <textarea id="jsonCsvIn" placeholder='[{"a":1,"b":2}]'></textarea>
+    <button class="action" onclick="jsonToCsv()">Convert</button>
+    <textarea id="jsonCsvOut" placeholder="CSV"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>YAML ⇄ JSON (stub)</h2>
+    <textarea id="yamlIn" placeholder="YAML or JSON"></textarea>
+    <button class="action" onclick="yamlToJson()">YAML → JSON</button>
+    <button class="action secondary" onclick="jsonToYaml()">JSON → YAML</button>
+    <textarea id="yamlOut" placeholder="Result / note"></textarea>
+    <small class="hint">Real YAML parsing omitted to keep this file small.</small>
+  </div>
+`,
+
+"Minifiers": `
+  <div class="card">
+    <h2>HTML Minifier (naive)</h2>
+    <textarea id="htmlMinIn"></textarea>
+    <button class="action" onclick="htmlMinOut.value=htmlMinIn.value.replace(/\\s+/g,' ')">Minify</button>
+    <textarea id="htmlMinOut"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>CSS Minifier (naive)</h2>
+    <textarea id="cssMinIn"></textarea>
+    <button class="action" onclick="cssMinOut.value=cssMinIn.value.replace(/\\s+/g,' ')">Minify</button>
+    <textarea id="cssMinOut"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>JS Minifier (naive)</h2>
+    <textarea id="jsMinIn"></textarea>
+    <button class="action" onclick="jsMinOut.value=jsMinIn.value.replace(/\\s+/g,' ')">Minify</button>
+    <textarea id="jsMinOut"></textarea>
+  </div>
+`,
+
+"Regex / Explain": `
+  <div class="card">
+    <h2>Regex Tester</h2>
+    <textarea id="regText" placeholder="Text"></textarea>
+    <input id="regExp" placeholder="/foo/gi">
+    <button class="action" onclick="runRegex()">Test</button>
+    <textarea id="regOut" placeholder="Matches / errors"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Regex Explain (stub)</h2>
+    <input id="regExplainIn" placeholder="e.g. ^[a-z]+$">
+    <button class="action" onclick="explainRegex()">Explain</button>
+    <textarea id="regExplainOut" placeholder="Explanation"></textarea>
+    <small class="hint">Full regex explanation engine omitted; this is a placeholder.</small>
+  </div>
+`,
+
+"URL / Cron / Stats": `
+  <div class="card">
+    <h2>URL Parser</h2>
+    <input id="urlParseIn" placeholder="https://example.com/path?x=1#hash">
+    <button class="action" onclick="parseURL()">Parse</button>
+    <textarea id="urlParseOut" placeholder="Parts"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Cron Parser (very basic)</h2>
+    <input id="cronIn" placeholder="*/5 * * * *">
+    <button class="action" onclick="cronOut.value=cronIn.value.split(' ').join('\\n')">Explain</button>
+    <textarea id="cronOut" placeholder="Fields"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Text Statistics</h2>
+    <textarea id="textStatsIn" placeholder="Paste text"></textarea>
+    <button class="action" onclick="textStats()">Analyze</button>
+    <textarea id="textStatsOut" placeholder="Stats"></textarea>
+  </div>
+`,
+
+"Diff / Clipboard": `
+  <div class="card">
+    <h2>Diff</h2>
+    <div class="row">
+      <textarea id="d1" placeholder="Text A"></textarea>
+      <textarea id="d2" placeholder="Text B"></textarea>
+    </div>
+    <button class="action" onclick="diffOut.value=diff(d1.value,d2.value)">Diff</button>
+    <textarea id="diffOut" placeholder="- old\n+ new"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Clipboard</h2>
+    <textarea id="clip" placeholder="Snippet"></textarea>
+    <button class="action" onclick="localStorage.setItem('super_clip',clip.value)">Save</button>
+    <button class="action secondary" onclick="clip.value=localStorage.getItem('super_clip')||''">Load</button>
+    <button class="action danger" onclick="localStorage.removeItem('super_clip');clip.value=''">Clear</button>
+    <small class="hint">Stored only in this browser under key "super_clip".</small>
+  </div>
+`,
+
+"Fun / Experimental": `
+  <div class="card">
+    <h2>ASCII Art Generator</h2>
+    <textarea id="asciiIn" placeholder="Type something"></textarea>
+    <button class="action" onclick="asciiOut.value=makeAscii(asciiIn.value)">Generate</button>
+    <textarea id="asciiOut" placeholder="ASCII art"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Noise Generator</h2>
+    <input id="noiseWidth" placeholder="Width (e.g. 32)">
+    <input id="noiseHeight" placeholder="Height (e.g. 16)">
+    <button class="action" onclick="noiseOut.value=makeNoise(noiseWidth.value,noiseHeight.value)">Generate</button>
+    <textarea id="noiseOut" placeholder="Random noise grid"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Password Strength Analyzer</h2>
+    <input id="pwIn" placeholder="Enter password">
+    <button class="action" onclick="pwOut.value=analyzePassword(pwIn.value)">Analyze</button>
+    <textarea id="pwOut" placeholder="Strength report"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Mini Terminal Emulator</h2>
+    <textarea id="termIn" placeholder="JS expression, e.g. 2+2"></textarea>
+    <button class="action" onclick="termOut.value=runTerminal(termIn.value)">Run</button>
+    <textarea id="termOut" placeholder="Result / error"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>JS REPL</h2>
+    <textarea id="replIn" placeholder="Multiple lines of JS"></textarea>
+    <button class="action" onclick="replOut.value=runRepl(replIn.value)">Run</button>
+    <textarea id="replOut" placeholder="Result / error"></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Pixel Drawing Canvas</h2>
+    <canvas id="pixelCanvas" width="200" height="200" style="background:#000;border-radius:4px;border:1px solid var(--border);image-rendering:pixelated;"></canvas>
+    <button class="action secondary" onclick="clearPixels()">Clear</button>
+    <small class="hint">Click to toggle pixels.</small>
+  </div>
+`
+};
+
+/* ===================== HELPERS ===================== */
+
+function decodeJWT(){
+  try{
+    let p = jwtin.value.split('.');
+    if(p.length < 2) throw new Error("Not a JWT");
+    const h = JSON.parse(atob(p[0]));
+    const b = JSON.parse(atob(p[1]));
+    jwtout.value = JSON.stringify(h,null,2) + "\n\n" + JSON.stringify(b,null,2);
+  }catch(e){
+    jwtout.value = "Invalid JWT: " + e;
+  }
+}
+
+async function doHash(type){
+  try{
+    const enc = new TextEncoder().encode(hashin.value);
+    const buf = await crypto.subtle.digest(type, enc);
+    hashout.value = [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  }catch(e){
+    hashout.value = "Error: " + e;
+  }
+}
+
+function doMD5(){
+  hashout.value = "MD5 implementation omitted in this compact build.";
+}
+
+function aesEncrypt(){
+  // toy "encryption": base64(text::key)
+  aesOut.value = btoa(aesText.value + "::" + aesKey.value);
+}
+function aesDecrypt(){
+  try{
+    const decoded = atob(aesOut.value);
+    const [text,key] = decoded.split("::");
+    aesOut.value = (key === aesKey.value) ? text : "Wrong password";
+  }catch(e){
+    aesOut.value = "Invalid blob";
+  }
+}
+
+function makeQR(){
+  qrOut.innerHTML = "";
+  if(!qrText.value){ return; }
+  const img = document.createElement("img");
+  img.src = "https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=" + encodeURIComponent(qrText.value);
+  img.alt = "QR code";
+  img.style.borderRadius = "4px";
+  qrOut.appendChild(img);
+}
+
+function renderMD(){
+  // super simple: escape HTML and show as text
+  const text = mdIn.value || "";
+  const escaped = text.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  mdOut.innerHTML = "<pre style='margin:0;white-space:pre-wrap;'>" + escaped + "</pre>";
+}
+
+function runSandbox(){
+  const html = sandboxHTML.value || "";
+  const css = "<style>" + (sandboxCSS.value || "") + "</style>";
+  const js  = "<script>" + (sandboxJS.value || "") + "<\/script>";
+  sandboxFrame.srcdoc = html + css + js;
+}
+
+function csvToJson(){
+  try{
+    const lines = csvIn.value.trim().split(/\n/);
+    if(!lines.length){ csvOut.value=""; return; }
+    const headers = lines.shift().split(",");
+    const out = lines.map(l=>{
+      const vals = l.split(",");
+      let o={};
+      headers.forEach((h,i)=>o[h]=vals[i]);
+      return o;
+    });
+    csvOut.value = JSON.stringify(out,null,2);
+  }catch(e){
+    csvOut.value = "Error: " + e;
+  }
+}
+
+function jsonToCsv(){
+  try{
+    const arr = JSON.parse(jsonCsvIn.value);
+    if(!Array.isArray(arr) || !arr.length){ jsonCsvOut.value=""; return; }
+    const headers = Object.keys(arr[0]);
+    const rows = arr.map(o=>headers.map(h=>o[h]).join(","));
+    jsonCsvOut.value = headers.join(",") + "\n" + rows.join("\n");
+  }catch(e){
+    jsonCsvOut.value = "Invalid JSON: " + e;
+  }
+}
+
+function yamlToJson(){
+  yamlOut.value = "YAML → JSON not implemented in this compact build.";
+}
+function jsonToYaml(){
+  yamlOut.value = "JSON → YAML not implemented in this compact build.";
+}
+
+function runRegex(){
+  try{
+    const r = eval(regExp.value); // e.g. /foo/gi
+    const m = regText.value.match(r);
+    regOut.value = m ? JSON.stringify(m,null,2) : "No match";
+  }catch(e){
+    regOut.value = "Invalid regex: " + e;
+  }
+}
+
+function explainRegex(){
+  const s = regExplainIn.value || "";
+  if(!s){ regExplainOut.value="No regex."; return; }
+  regExplainOut.value = "Regex explanation stub for: " + s;
+}
+
+function parseURL(){
+  try{
+    const u = new URL(urlParseIn.value);
+    urlParseOut.value = JSON.stringify({
+      protocol: u.protocol,
+      host: u.host,
+      pathname: u.pathname,
+      search: u.search,
+      hash: u.hash
+    },null,2);
+  }catch(e){
+    urlParseOut.value = "Invalid URL: " + e;
+  }
+}
+
+function textStats(){
+  const t = textStatsIn.value || "";
+  const chars = t.length;
+  const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+  const lines = t.split(/\n/).length;
+  textStatsOut.value = JSON.stringify({chars,words,lines},null,2);
+}
+
+function diff(a,b){
+  let out="",aa=a.split(/\n/),bb=b.split(/\n/);
+  const max=Math.max(aa.length,bb.length);
+  for(let i=0;i<max;i++){
+    if(aa[i]!==bb[i]){
+      out+=`- ${aa[i]||""}\n+ ${bb[i]||""}\n`;
+    }
+  }
+  return out||"No differences";
+}
+
+/* Level 5 helpers */
+
+function makeAscii(text){
+  if(!text) return "";
+  const chars = " .:-=+*#%@";
+  let out = "";
+  for(let i=0;i<text.length;i++){
+    const code = text.charCodeAt(i);
+    const idx = code % chars.length;
+    out += chars[idx];
+  }
+  return out;
+}
+
+function makeNoise(w,h){
+  w = parseInt(w)||32;
+  h = parseInt(h)||16;
+  let out = "";
+  for(let y=0;y<h;y++){
+    let row="";
+    for(let x=0;x<w;x++){
+      row += Math.random()>0.5 ? "█" : " ";
+    }
+    out += row + "\n";
+  }
+  return out;
+}
+
+function analyzePassword(pw){
+  if(!pw) return "No password entered.";
+  const length = pw.length;
+  const hasLower = /[a-z]/.test(pw);
+  const hasUpper = /[A-Z]/.test(pw);
+  const hasNum   = /[0-9]/.test(pw);
+  const hasSym   = /[^A-Za-z0-9]/.test(pw);
+  let score = 0;
+  if(length >= 8) score++;
+  if(length >= 12) score++;
+  if(hasLower && hasUpper) score++;
+  if(hasNum) score++;
+  if(hasSym) score++;
+  const levels = ["Very weak","Weak","Okay","Good","Strong","Very strong"];
+  return JSON.stringify({
+    length,
+    hasLower,
+    hasUpper,
+    hasNum,
+    hasSym,
+    score,
+    rating: levels[score]
+  },null,2);
+}
+
+function runTerminal(expr){
+  try{
+    return String(eval(expr));
+  }catch(e){
+    return "Error: " + e;
+  }
+}
+
+function runRepl(code){
+  try{
+    return String(eval(code));
+  }catch(e){
+    return "Error: " + e;
+  }
+}
+
+let pixelCtx, pixelSize = 10;
+function initPixelCanvas(){
+  const c = document.getElementById("pixelCanvas");
+  if(!c) return;
+  pixelCtx = c.getContext("2d");
+  pixelCtx.fillStyle = "#000";
+  pixelCtx.fillRect(0,0,c.width,c.height);
+  c.addEventListener("click", e=>{
+    const rect = c.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left)/pixelSize)*pixelSize;
+    const y = Math.floor((e.clientY - rect.top)/pixelSize)*pixelSize;
+    const img = pixelCtx.getImageData(x,y,1,1).data;
+    const isOn = img[0] > 0 || img[1] > 0 || img[2] > 0;
+    pixelCtx.fillStyle = isOn ? "#000000" : "#ffffff";
+    pixelCtx.fillRect(x,y,pixelSize,pixelSize);
+  }, { once: true });
+}
+
+function clearPixels(){
+  const c = document.getElementById("pixelCanvas");
+  if(!c || !pixelCtx) return;
+  pixelCtx.fillStyle = "#000";
+  pixelCtx.fillRect(0,0,c.width,c.height);
+}
+
+/* ===================== THEME TOGGLE ===================== */
+
+const themeBtn = document.getElementById("themeToggle");
+
+if (localStorage.getItem("toolboxTheme") === "light") {
+  document.body.classList.add("light");
+  themeBtn.textContent = "🌞 Light";
+}
+
+themeBtn.onclick = () => {
+  document.body.classList.toggle("light");
+  const isLight = document.body.classList.contains("light");
+  themeBtn.textContent = isLight ? "🌞 Light" : "🌙 Dark";
+  localStorage.setItem("toolboxTheme", isLight ? "light" : "dark");
+};
+
+/* ===================== TABS ===================== */
+
+const tabs = document.getElementById("tabs");
+const content = document.getElementById("content");
+
+const tabDefs = [
+  ["Base64 / URL / HTML","🧾"],
+  ["Time / JWT","⏱️"],
+  ["Hashing / AES","🔐"],
+  ["QR / UUID / Random","📡"],
+  ["Markdown / Sandbox","📄"],
+  ["CSV / JSON / YAML","📊"],
+  ["Minifiers","🪚"],
+  ["Regex / Explain","🔍"],
+  ["URL / Cron / Stats","🌐"],
+  ["Diff / Clipboard","📎"],
+  ["Fun / Experimental","🎲"]
+];
+
+tabDefs.forEach(([name,icon],i)=>{
+  const b = document.createElement("button");
+  b.innerHTML = `<span>${icon}</span> <span>${name}</span>`;
+  b.onclick = () => show(name,b);
+  if(i===0) b.classList.add("active");
+  tabs.appendChild(b);
+});
+
+function show(name,btn){
+  [...tabs.children].forEach(x=>x.classList.remove("active"));
+  btn.classList.add("active");
+  content.innerHTML = `<section style="display:block">${tools[name]}</section>`;
+  if (name === "Fun / Experimental") {
+    setTimeout(initPixelCanvas, 0);
+  }
+}
+
+show(tabDefs[0][0], tabs.children[0]);
+</script>
+
+</body>
+</html>
